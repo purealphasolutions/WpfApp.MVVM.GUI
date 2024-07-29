@@ -1,0 +1,36 @@
+name: ExcelDna-Commit-Actions
+run-name: ${{ github.actor }} is running after commit
+on: [push]
+jobs:
+  build:
+  
+    runs-on: windows-latest #windows-2019 #windows-latest
+    strategy:
+      matrix:
+        dotnet-version: [ '6.0' ]
+          
+    steps:
+    
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+  
+      - uses: actions/checkout@v3
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Install dependencies
+        run: dotnet restore
+        #working-directory: ./WpfApp.MVVM.GUI
+        continue-on-error: true
+        
+      - name: Restore
+        run: dotnet restore ./WpfApp.MVVM.GUI/WpfApp.MVVM.GUI.csproj
+        
+      - name: Build
+        #run: dotnet build --configuration Release --restore
+        run: msbuild -property:Configuration=Release ./WpfApp.MVVM.GUI/WpfApp.MVVM.GUI.csproj
+        #run: msbuild -property:Configuration=Release;Platform="Any CPU";Runtimeidentifier=win-x64 -restore -target:publish WpfApp.MVVM.GUI.sln
+        
+      - name: Create the package
+        run: dotnet pack --configuration Release ./WpfApp.MVVM.GUI/WpfApp.MVVM.GUI.csproj    
